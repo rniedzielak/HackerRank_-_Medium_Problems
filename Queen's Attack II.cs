@@ -15,87 +15,144 @@ using System;
 class Solution {
 
     // Complete the queensAttack function below.
-    static int queensAttack(int n, int k, int r_q, int c_q, int[][] obstacles)
-    {
-            int result = 0;           
-            int[][] grid = new int[n][];
-            for (int i = 0; i <grid.Length; i++)
+        static int[][] method_for_obstacles(int n, int r_q, int c_q)
+        {// This method initialize first blockers so at beginning it just end of grid.
+            int[][] obstacles = new int[8][];
+            for (int i = 0; i < obstacles.Length; i++)
             {
-                grid[i] = new int[n];
+                obstacles[i] = new int[2];
             }
-            grid[r_q-1][c_q-1] = 0;
-            if (k != 0)
+            //0 will be left direction
+            obstacles[0][0] = r_q;
+            obstacles[0][1] = 0;
+            //1-Left + UP
+            int min = Math.Min(n - r_q, c_q - 1);
+            obstacles[1][0] = r_q + min + 1;
+            obstacles[1][1] = c_q - min - 1;
+            //2-Up
+            obstacles[2][0] = n + 1;
+            obstacles[2][1] = c_q;
+            //3-RIGHT+UP
+            min = Math.Min(n - r_q, n - c_q);
+            obstacles[3][0] = r_q + min + 1;
+            obstacles[3][1] = c_q + min + 1;
+            //4-RIGHT
+            obstacles[4][0] = r_q;
+            obstacles[4][1] = n + 1;
+            //5 - RIGHT+DOWN
+            min = Math.Min(r_q - 1, n - c_q);
+            obstacles[5][0] = r_q - min - 1;
+            obstacles[5][1] = c_q + min + 1;
+            //6 - DOWN
+            obstacles[6][0] = 0;
+            obstacles[6][1] = c_q;
+            //7 - LEFT + DOWN
+            min = Math.Min(r_q - 1, c_q - 1);
+            obstacles[7][0] = r_q - min - 1;
+            obstacles[7][1] = c_q - min - 1;
+
+            return obstacles;
+        }
+        static int count_all_possible_mouves(int[][] obstacles_for_queen)
+        {
+            int counter=0;
+            // add horizontal options
+            counter += obstacles_for_queen[4][1] - obstacles_for_queen[0][1] - 2; // 2 due to fact that one position take queen and one border
+            // add vertical options
+            counter += obstacles_for_queen[2][0] - obstacles_for_queen[6][0] - 2;
+            // add l_b to r_t options
+            counter += obstacles_for_queen[3][0] - obstacles_for_queen[7][0] - 2;
+            // add l_t to r_b options
+            counter += obstacles_for_queen[1][0] - obstacles_for_queen[5][0] - 2;
+
+            return counter;
+        }
+        static int queensAttack(int n, int k, int r_q, int c_q, int[][] obstacles)
+        {       
+            int[][] obstacles_for_queen = method_for_obstacles(n, r_q, c_q);
+            for (int i = 0; i < obstacles.Length; i++)
             {
-                for (int i = 0; i < obstacles.Length; i++)
-                    grid[obstacles[i][0] - 1][obstacles[i][1] - 1] = -1;
-                for (int i = r_q; i < n; i++)
-                { // UP
-                    if (grid[i][c_q - 1] != -1)
-                        grid[i][c_q - 1] = 1;
-                    else
-                        break;
-                }
-                for (int i = r_q - 2; i > -1; i--)//down
+                int rows_from_obst = obstacles[i][0];//now we get present obstacle
+                int colu_from_obst = obstacles[i][1];
+                if (rows_from_obst==r_q) // so present obstacle is on way of our queen horizontally
                 {
-                    if (grid[i][c_q - 1] != -1)
-                        grid[i][c_q - 1] = 1;
-                    else
-                        break;
+                    if (colu_from_obst < c_q) // problem on way from left
+                    {
+                        if (obstacles_for_queen[0][0] == 0 || colu_from_obst>obstacles_for_queen[0][1])
+                        {
+                            obstacles_for_queen[0][0] = rows_from_obst;
+                            obstacles_for_queen[0][1] = colu_from_obst; // now we chacke is there something earlier on way our queen from left
+                        }                       
+                    }
+                    else // problem on way from right
+                    {
+                        if (obstacles_for_queen[4][0] == 0 || colu_from_obst < obstacles_for_queen[4][1])
+                        {
+                            obstacles_for_queen[4][0] = rows_from_obst;
+                            obstacles_for_queen[4][1] = colu_from_obst;// now we chacke is there something earlier on way our queen from right
+                        }
+                    }
                 }
-                for (int i = c_q; i < n; i++)//right
+                else if (colu_from_obst==c_q) // problem verically?
                 {
-                    if (grid[r_q - 1][i] != -1)
-                        grid[r_q - 1][i] = 1;
-                    else
-                        break;
+                    if (rows_from_obst < r_q) // DOWN
+                    {
+                        if (obstacles_for_queen[6][0] == 0 || rows_from_obst > obstacles_for_queen[6][0])
+                        {
+                            obstacles_for_queen[6][0] = rows_from_obst;
+                            obstacles_for_queen[6][1] = colu_from_obst;
+                        }
+                    }
+                    else // UP
+                    {
+                        if (obstacles_for_queen[2][0] == 0|| rows_from_obst < obstacles_for_queen[2][0])
+                        {
+                            obstacles_for_queen[2][0] = rows_from_obst;
+                            obstacles_for_queen[2][1] = colu_from_obst;
+                        }
+                    }
                 }
-                for (int i = c_q - 2; i > -1; i--)//left
+                else if (rows_from_obst - r_q == colu_from_obst - c_q) // chacke Left+DOWN
                 {
-                    if (grid[r_q - 1][i] != -1)
-                        grid[r_q - 1][i] = 1;
+                    if (rows_from_obst > r_q)
+                    {
+                        if (obstacles_for_queen[3][0] == 0 || rows_from_obst<obstacles_for_queen[3][0])
+                        {
+                            obstacles_for_queen[3][0] = rows_from_obst;
+                            obstacles_for_queen[3][1] = colu_from_obst;
+                        }
+                    }
                     else
-                        break;
+                    {
+                        if (obstacles_for_queen[7][0] == 0 || rows_from_obst> obstacles_for_queen[7][0])
+                        {
+                            obstacles_for_queen[7][0] = rows_from_obst;
+                            obstacles_for_queen[7][1] = colu_from_obst;
+                        }
+                    }
                 }
-                for (int i = r_q, j = c_q; i < n && j < n; i++, j++) // up+right
+                else if (Math.Abs(rows_from_obst-r_q) == Math.Abs(colu_from_obst-c_q)) // LEFT+UP DIAGONAL
                 {
-                    if (grid[i][j] != -1)
-                        grid[i][j] = 1;
+                    if (rows_from_obst > r_q)
+                    {
+                        if (obstacles_for_queen[1][0] == 0 || rows_from_obst < obstacles_for_queen[1][0])
+                        {
+                            obstacles_for_queen[1][0] = rows_from_obst;
+                            obstacles_for_queen[1][1] = colu_from_obst;
+                        }
+                    }
                     else
-                        break;
+                    {
+                        if (obstacles_for_queen[5][0] == 0 || obstacles_for_queen[5][0] < rows_from_obst)
+                        {
+                            obstacles_for_queen[5][0] = rows_from_obst;
+                            obstacles_for_queen[5][1] = colu_from_obst;
+                        }
+                    }
                 }
-                for (int i = r_q, j = c_q - 2; i < n && j > -1; i++, j--) // up+left
-                {
-                    if (grid[i][j] != -1)
-                        grid[i][j] = 1;
-                    else
-                        break;
-                }
-                for (int i = r_q - 2, j = c_q; i > -1 && j < n; i--, j++) // down+right
-                {
-                    if (grid[i][j] != -1)
-                        grid[i][j] = 1;
-                    else
-                        break;
-                }
-                for (int i = r_q - 2, j = c_q - 2; i > -1 && j > -1; i--, j--) // down+left
-                {
-                    if (grid[i][j] != -1)
-                        grid[i][j] = 1;
-                    else
-                        break;
-                }
-                for (int i = 0; i < grid.Length; i++)
-                {
-                    result += grid[i].Count(v => v == 1);
-                }
-                return result;
             }
-            else
-            {
-                return n - r_q + (r_q - 1) + (n - c_q) + (c_q - 1) + Math.Min(n - c_q, n - r_q) +
-                    +Math.Min(n - c_q, r_q - 1) + Math.Min(c_q - 1, n - r_q) + Math.Min(c_q - 1, r_q - 1);
-            } 
-    }
+            return count_all_possible_mouves(obstacles_for_queen);            
+        }
 
     static void Main(string[] args) {
         TextWriter textWriter = new StreamWriter(@System.Environment.GetEnvironmentVariable("OUTPUT_PATH"), true);
